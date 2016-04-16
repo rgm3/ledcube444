@@ -976,7 +976,7 @@ void rain() {
 /** 由右上四个小正方体扩散一次 在扩散一次 回到中间四个
     Diffuses from the upper right four small cube once again
     returned to the middle of the diffusion four */
-void nextfourspread() / {
+void nextfourspread() {
   __code uint8_t
       tabP0[28][8] = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                       {0x33, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
