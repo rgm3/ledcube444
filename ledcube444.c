@@ -3,7 +3,7 @@
  *
  * This code is for an STC12C5A60S2 microcontroller, reformatted and adapted to
  * compile on an open source stack without the Kiel tools by rgm.
- * 
+ *
  * Kit:
  * http://www.icstation.com/lightsquared-4x4x4-257mm-cube-white-redblu-p-4682.html
  *
@@ -16,20 +16,13 @@
 #include <stdint.h>
 
 __code uint8_t tabP0[38][8] = {{0x00, 0x60, 0x60, 0x00, 0x00, 0x60, 0x60, 0x00}};
-__code uint8_t tabP2[] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F}; //扫描
+__code uint8_t tabP2[] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F}; //扫描 - scanning
 __code uint8_t PWMsz[8] = {0x00, 0x60, 0x60, 0x00,
-                         0x00, 0x60, 0x60, 0x00}; //中间四个
-
-/********************************************************************
-* 名称 : Delay_1ms()
-* 功能 : 延时子程序，延时时间为 1ms * x
-* 输入 : x (延时一毫秒的个数)
-* 输出 : 无
-***********************************************************************/
+                         0x00, 0x60, 0x60, 0x00}; //中间四个 - four intermediate
 
 /************************************************************************/
-//结束呼吸灯专用
-__code uint8_t table[] = {
+//结束呼吸灯专用 - end special breathing light (all set; breath easy?)
+__code uint8_t delayTable[] = {
     0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,
     13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,
     27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,
@@ -48,46 +41,51 @@ void delay(uint8_t z) {
     for (y = z; y > 0; y--)
       ;
 }
-void light1(uint8_t num1) {
+void light1(uint8_t idx) {
   uint8_t j;
   P0 = 0x00;
   P2 = 0x00;
-  j = table[num1];
+  j = delayTable[idx];
   delay(j);
   P0 = 0xff;
   P2 = 0x00;
   delay(150 - j);
 }
 
-void light2(uint8_t num2) {
+void light2(uint8_t idx) {
   uint8_t j;
   P0 = 0xff;
   P2 = 0x00;
-  j = table[num2];
+  j = delayTable[idx];
   delay(j);
   P0 = 0x00;
   P2 = 0x00;
   delay(150 - j);
 }
+
 /*******************************************************************/
-void ys(uint8_t i) // 1ms延时
+void delay_ms(uint8_t ms) // 1ms延时 - 1ms delay
 {
   uint8_t x, j;
-  for (j = 0; j < i; j++)
+  for (j = 0; j < ms; j++)
     for (x = 0; x <= 148; x++)
       ;
 }
 
-void init() //初始化函数
+/** Initialization function */
+void init()
 {
   TMOD = 0x02; //定时器0，工作模式2（0000，0010），8位定时模式
+               //Timer 0, mode 2 (0000,0010), 8-bit timer mode
   TH0 = 0x06; //写入预置初值6到定时器0，使250微秒溢出一次（12MHz）
-  TL0 = 0x06; //写入预置值
-  ET0 = 1;    //允许定时器0中断
-  EA = 1;     //允许总中断
+              //6 preset initial value is written to timer 0, so that 250 microseconds overflow once (12MHz)
+  TL0 = 0x06; //写入预置值 - written preset value
+  ET0 = 1;    //允许定时器0中断 - enable timer 0 interrupt
+  EA = 1;     //允许总中断 - enable global interrupts
 }
 
-void alllighttooff() //闪动4下最后关闭
+/** 闪动4下最后关闭 - The last 4 flashing close */
+void alllighttooff()
 {
   __code uint8_t tabP0[8][8] = {
       {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -105,13 +103,14 @@ void alllighttooff() //闪动4下最后关闭
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
 
-void randomlight() //随机亮完
+/** 随机亮完 - random with bright finish */
+void randomlight()
 {
   __code uint8_t tabP0[38][8] = {
       {0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -158,12 +157,14 @@ void randomlight() //随机亮完
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void randomoff() //随机灭完
+
+/** 随机灭完 - randomly turn all off */
+void randomoff()
 {
   __code uint8_t tabP0[23][8] = {
       {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -198,12 +199,15 @@ void randomoff() //随机灭完
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void allfalloff() //由全亮到下落关闭只剩一排
+
+/** 由全亮到下落关闭只剩一排
+    Close by the full light only to fall in a row */
+void allfalloff()
 {
   __code uint8_t tabP0[4][8] = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
                               {0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF},
@@ -216,12 +220,14 @@ void allfalloff() //由全亮到下落关闭只剩一排
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void turnR() //由下面一排转到右面
+
+/** 由下面一排转到右面 - move to bottom right row */
+void turnR()
 {
   __code uint8_t tabP0[6][8] = {{0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00, 0xFF},
                               {0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0xFF},
@@ -236,13 +242,14 @@ void turnR() //由下面一排转到右面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(6);
+        delay_ms(6);
       }
     }
   }
 }
 
-void righttoleft() //右面平移到左面
+/** 右面平移到左面 - pan from right to left */
+void righttoleft()
 {
   __code uint8_t tabP0[4][8] = {{0x00, 0x00, 0x00, 0x00, 0x0F, 0x0F, 0x0F, 0x0F},
                               {0x00, 0x00, 0x00, 0x00, 0xF0, 0xF0, 0xF0, 0xF0},
@@ -255,12 +262,14 @@ void righttoleft() //右面平移到左面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void lefttoright() //左面平移到右面
+
+/** 左面平移到右面 - pan from left to right */
+void lefttoright()
 {
   __code uint8_t tabP0[4][8] = {{0x0F, 0x0F, 0x0F, 0x0F, 0x00, 0x00, 0x00, 0x00},
                               {0xF0, 0xF0, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00},
@@ -273,12 +282,14 @@ void lefttoright() //左面平移到右面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void turnD() //从右面到下面
+
+/** 从右面到下面 - from the right to the following */
+void turnD()
 {
   __code uint8_t tabP0[6][8] = {{0x00, 0x00, 0x00, 0x00, 0xF0, 0x0F, 0x0F, 0x0F},
                               {0xF0, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x0F, 0x0F},
@@ -293,12 +304,14 @@ void turnD() //从右面到下面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void toptofollowing() //上面平移到下面
+
+/** 上面平移到下面 - move below the top level */
+void toptofollowing()
 {
   __code uint8_t tabP0[4][8] = {
       {0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
@@ -314,12 +327,14 @@ void toptofollowing() //上面平移到下面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
-void followingtotop() //下面平移到上面
+
+/** 下面平移到上面 - the following pan to the top */
+void followingtotop()
 {
   __code uint8_t tabP0[4][8] = {
       {0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF},
@@ -335,12 +350,14 @@ void followingtotop() //下面平移到上面
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
-void alllight() //右到左全亮
+
+/** 右到左全亮 - right to left full brightness */
+void alllight()
 {
   __code uint8_t tabP0[4][8] = {{0x00, 0x00, 0x00, 0x00, 0x0F, 0x0F, 0x0F, 0x0F},
                               {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -353,12 +370,14 @@ void alllight() //右到左全亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void evel() // 斜面亮
+
+/** 斜面亮 - slope ryo (slope down?) */
+void evel()
 {
   __code uint8_t tabP0[7][8] = {
       {0x00, 0x00, 0x00, 0xFE, 0x00, 0x00, 0x00, 0xF7},
@@ -376,12 +395,14 @@ void evel() // 斜面亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
-void followtotop() //上面转移到后面  可以接旋转
+
+/** 上面转移到后面  可以接旋转 - the above transfer can take back to the rotation (?) */
+void followtotop()
 {
   __code uint8_t tabP0[10][8] = {{0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
                                {0xEE, 0x11, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
@@ -402,12 +423,14 @@ void followtotop() //上面转移到后面  可以接旋转
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void spin() // 旋转
+
+/** 旋转 - rotation */
+void spin()
 {
   __code uint8_t tabP0[8][8] = {
       {0x48, 0x48, 0x48, 0x48, 0x21, 0x21, 0x21, 0x21},
@@ -426,12 +449,14 @@ void spin() // 旋转
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
-void Thenthelast() //接旋转下来到第一排
+
+/** 接旋转下来到第一排 - Then rotate down to the first row */
+void Thenthelast()
 {
   __code uint8_t tabP0[3][8] = {{0x00, 0x48, 0x48, 0x48, 0x00, 0x21, 0x21, 0x21},
                               {0x00, 0x00, 0x48, 0x48, 0x00, 0x00, 0x21, 0x21},
@@ -443,12 +468,15 @@ void Thenthelast() //接旋转下来到第一排
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void thelast() //接下来一排斜的 后4点转到左上1
+
+/** 接下来一排斜的 后4点转到左上1
+    Next, a diagonal row after 4:00 Turn left 1 */
+void thelast()
 {
   __code uint8_t tabP0[43][8] = {
       {0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x21},
@@ -503,12 +531,14 @@ void thelast() //接下来一排斜的 后4点转到左上1
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(5);
+        delay_ms(5);
       }
     }
   }
 }
-void twoidea() //左上1开始 三个走 最后 底层亮完
+
+/** 左上1开始 三个走 最后 底层亮完 - 1 starts last three go left bottom bright finish */
+void twoidea() //
 {
   __code uint8_t tabP0[19][8] = {
       {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -538,12 +568,16 @@ void twoidea() //左上1开始 三个走 最后 底层亮完
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(12);
+        delay_ms(12);
       }
     }
   }
 }
-void around2() //从左下第一点贪吃蛇样  转到左上第一点
+
+
+/** 从左下第一点贪吃蛇样  转到左上第一点
+    Snake left from the first point to the upper left of the first sample point */
+void around2()
 {
   __code uint8_t tabP0[27][8] = {{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00},
                                {0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00},
@@ -581,12 +615,15 @@ void around2() //从左下第一点贪吃蛇样  转到左上第一点
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void spread() //从左上1扩散全部一次  最后回到右上1
+
+/** 从左上1扩散全部一次  最后回到右上1
+    Left on diffusion all at once and finally back to the upper right 1 */
+void spread()
 {
   __code uint8_t tabP0[42][8] = {
       {0x13, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -640,13 +677,14 @@ void spread() //从左上1扩散全部一次  最后回到右上1
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
 
-void framework() //从右上第一点延伸框架
+/** 从右上第一点延伸框架 - First point extends right framework */
+void framework()
 {
   __code uint8_t tabP0[8][8] = {
       {0x00, 0x00, 0x00, 0x00, 0x13, 0x01, 0x00, 0x00},
@@ -665,13 +703,15 @@ void framework() //从右上第一点延伸框架
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
 
-void nextkj1() //第一种接框架后 4个小正方形转动最后全亮
+/** 第一种接框架后 4个小正方形转动最后全亮
+    4 small square full brightness after the final rotation of the first connection frame */
+void nextkj1()
 {
   __code uint8_t tabP0[32][8] = {
       {0x9F, 0x09, 0x09, 0x9F, 0x9F, 0x09, 0x09, 0x9F},
@@ -715,12 +755,15 @@ void nextkj1() //第一种接框架后 4个小正方形转动最后全亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
-void nextkj2() //第二种接框架后  最后上面一排亮
+
+/** 第二种接框架后  最后上面一排亮
+    After the second pick last frame above a row of light (?) */
+void nextkj2()
 {
   __code uint8_t tabP0[10][8] = {
       {0x9F, 0x09, 0x09, 0x9F, 0x9F, 0x09, 0x09, 0x9F},
@@ -740,12 +783,15 @@ void nextkj2() //第二种接框架后  最后上面一排亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
-void drip() //接上面全亮的，滴水  ,最后最下面的一排亮
+
+/** 接上面全亮的，滴水  ,最后最下面的一排亮
+    Then above all bright, dripping, and finally the bottom row of bright */
+void drip()
 {
   __code uint8_t tabP0[25][8] = {
       {0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
@@ -782,13 +828,14 @@ void drip() //接上面全亮的，滴水  ,最后最下面的一排亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(5);
+        delay_ms(5);
       }
     }
   }
 }
 
-void followingtofront() //从最下面全亮到最前面一列
+/** 从最下面全亮到最前面一列 - All lit from the bottom to the top of a (?) */
+void followingtofront()
 {
   __code uint8_t tabP0[7][8] = {
       {0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF},
@@ -807,13 +854,14 @@ void followingtofront() //从最下面全亮到最前面一列
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(6);
+        delay_ms(6);
       }
     }
   }
 }
-
-void around() //最前面一面全亮开始 围着光立方转 最后回到第一面
+/** 最前面一面全亮开始 围着光立方转 最后回到第一面
+    Front side all light began to turn around last light cube back to the first surface */
+void around()
 {
   __code uint8_t tabP0[12][8] = {
       {0x13, 0x13, 0x13, 0x13, 0x10, 0x10, 0x10, 0x10},
@@ -835,13 +883,14 @@ void around() //最前面一面全亮开始 围着光立方转 最后回到第�
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
 
-void aroundnext() //接Around 第一面转到第一列
+/** 接Around 第一面转到第一列 - Around the first contact surface to the first column */
+void aroundnext()
 {
   __code uint8_t tabP0[13][8] = {
       {0x11, 0x11, 0x11, 0x10, 0x11, 0x11, 0x11, 0x13},
@@ -866,12 +915,14 @@ void aroundnext() //接Around 第一面转到第一列
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void rain() //全关 水滴到全关
+
+/** 全关 水滴到全关 - fully closed to fully closed (off?) water droplets */
+void rain()
 {
   __code uint8_t tabP0[40][8] = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -922,13 +973,16 @@ void rain() //全关 水滴到全关
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
 
-void nextfourspread() //由右上四个小正方体扩散一次 在扩散一次 回到中间四个
+/** 由右上四个小正方体扩散一次 在扩散一次 回到中间四个
+    Diffuses from the upper right four small cube once again
+    returned to the middle of the diffusion four */
+void nextfourspread() /
 {
   __code uint8_t tabP0[28][8] = {
       {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -966,12 +1020,15 @@ void nextfourspread() //由右上四个小正方体扩散一次 在扩散一次 
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void fourspread() //从中间四个小灯亮扩散到外面四个亮
+
+/** 从中间四个小灯亮扩散到外面四个亮
+    Four small lights from the middle to the outside four light diffusion */
+void fourspread()
 {
   __code uint8_t tabP0[12][8] = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -994,12 +1051,16 @@ void fourspread() //从中间四个小灯亮扩散到外面四个亮
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void any1() // 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到后面在接旋转
+
+/** 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到后面在接旋转
+Snake-like three points to the uppermost layer above all light can
+be connected to the back of the pick rotation */
+void any1()
 {
   __code uint8_t tabP0[52][8] = {
       {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -1063,12 +1124,15 @@ void any1() // 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
-void any2() //从底下中间一个小正方体  慢慢向上走 到顶层扩散开  在下到底层
+
+/** 从底下中间一个小正方体  慢慢向上走 到顶层扩散开  在下到底层
+Cube slowly from the middle of the bottom up to the top of a small spread next to the bottom */
+void any2()
 {
   __code uint8_t tabP0[8][8] = {
       {0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x60},
@@ -1088,12 +1152,15 @@ void any2() //从底下中间一个小正方体  慢慢向上走 到顶层扩散
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(10);
+        delay_ms(10);
       }
     }
   }
 }
-void any3() //从顶层转到斜面 可以接旋转
+
+/** 从顶层转到斜面 可以接旋转
+From top to slant can pick rotation */
+void any3()
 {
   __code uint8_t tabP0[46][8] = {
       {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -1151,12 +1218,14 @@ void any3() //从顶层转到斜面 可以接旋转
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
-void any4() //右上一个小正方体 绕绕绕到左上
+
+/** 右上一个小正方体 绕绕绕到左上 - Upper right around a small cube around the wound left */
+void any4()
 {
   __code uint8_t tabP0[21][8] = {
       {0x00, 0x00, 0x00, 0x00, 0x8C, 0x88, 0x00, 0x00},
@@ -1187,13 +1256,14 @@ void any4() //右上一个小正方体 绕绕绕到左上
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
 
-void any5() //从地下旋转起来  接旋转
+/** 从地下旋转起来  接旋转 - Then rotate to spin up from the underground */
+void any5()
 {
   __code uint8_t tabP0[36][8] = {
       {0x00, 0x00, 0x00, 0xFE, 0x00, 0x00, 0x00, 0xF7},
@@ -1241,13 +1311,15 @@ void any5() //从地下旋转起来  接旋转
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(8);
+        delay_ms(8);
       }
     }
   }
 }
 
-void any6() //从下随机升起 一直上去 最后灭  快速过场
+/** 从下随机升起 一直上去 最后灭  快速过场
+Stochastic has been raised up from the last off the field too fast */
+void any6()
 {
   __code uint8_t tabP0[9][8] = {{0x00, 0x00, 0x00, 0x52, 0x00, 0x00, 0x00, 0xC2},
                               {0x00, 0x00, 0xA0, 0x52, 0x00, 0x00, 0x64, 0xC2},
@@ -1265,12 +1337,15 @@ void any6() //从下随机升起 一直上去 最后灭  快速过场
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(5);
+        delay_ms(5);
       }
     }
   }
 }
-void any7() //音频显示      从底层亮完开始，最后全灭
+
+/** 音频显示      从底层亮完开始，最后全灭
+Audio display light from the bottom after the beginning of the last Quanmie (?) */
+void any7()
 {
   __code uint8_t tabP0[20][8] = {
       {0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF},
@@ -1300,12 +1375,16 @@ void any7() //音频显示      从底层亮完开始，最后全灭
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(6);
+        delay_ms(6);
       }
     }
   }
 }
-void any8() //由全灭 到右下第一个起来成一竖列 然后竖列逐个走 最后到左上一个亮
+
+/** 由全灭 到右下第一个起来成一竖列 然后竖列逐个走 最后到左上一个亮
+From the first to the lower right a Quanmie up into a vertical column and
+the vertical column down one by one and finally to a bright upper left */
+void any8()
 {
   __code uint8_t tabP0[25][8] = {
       {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
@@ -1340,12 +1419,14 @@ void any8() //由全灭 到右下第一个起来成一竖列 然后竖列逐个�
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(6);
+        delay_ms(6);
       }
     }
   }
 }
-void any9() //由上面一排全亮  转到左上小正方形
+
+/** 由上面一排全亮  转到左上小正方形 - All lit from the top row left to a small square */
+void any9()
 {
   __code uint8_t tabP0[30][8] = {
       {0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
@@ -1386,13 +1467,14 @@ void any9() //由上面一排全亮  转到左上小正方形
         P0 = 0;
         P2 = tabP2[i];
         P0 = tabP0[j][i];
-        ys(7);
+        delay_ms(7);
       }
     }
   }
 }
 
-void begin() //全灭 呼吸亮
+/** 全灭 呼吸亮 - Quanmie breathing light (all set; breath easily?) */
+void begin()
 {
   int i;
   for (i = 0; i < 140; i++) {
@@ -1402,7 +1484,8 @@ void begin() //全灭 呼吸亮
   P2 = 0x00;
 }
 
-void end() //全亮 呼吸灭
+/** 全亮 呼吸灭 - off all light breathing */
+void end()
 {
   int i;
   P0 = 0xff;
@@ -1415,147 +1498,146 @@ void end() //全亮 呼吸灭
 }
 
 /********************************************************************
-* 名称 : Main()
-* 功能 : 主函数
-* 输入 : 无
-* 输出 : 无
+* 名称 - main
 ***********************************************************************/
 void main() {
   P0M0 = 0xff;
   P0M1 = 0x00;
+
   while (1) {
-    begin();          //全灭 呼吸亮
-    allfalloff();     //由全亮到下落关闭只剩一排
-    turnR();          //由下面一排转到右面
-    righttoleft();    //右面平移到左面
-    lefttoright();    //左面平移到右面
-    righttoleft();    //右面平移到左面
-    lefttoright();    //左面平移到右面
-    turnD();          //从右面到下面
-    followingtotop(); //下面平移到上面
-    toptofollowing(); //上面平移到下面
-    followingtotop(); //下面平移到上面
-    toptofollowing(); //上面平移到下面
-    any1();           // 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到后面在接旋转
-    followtotop();    //从上面到后面
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    Thenthelast();    //接旋转下来到第一排
-    thelast();        //接下来一排斜的 后4点转到左上1
-    randomlight();    //随机亮起
-    drip();          //接上面全亮的，滴水  ,最后最下面的一排亮
-    alllighttooff(); //闪动4下最后关闭
+    begin();
+    allfalloff();
+    turnR();
+    righttoleft();
+    lefttoright();
+    righttoleft();
+    lefttoright();
+    turnD();
+    followingtotop();
+    toptofollowing();
+    followingtotop();
+    toptofollowing();
+    any1();
+    followtotop();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    Thenthelast();
+    thelast();
+    randomlight();
+    drip();
     alllighttooff();
+    alllighttooff();
+
     /*******************************************************************************/
 
-    any6(); //从下随机升起 一直上去 最后灭  快速过场
     any6();
-    around2();   //从左下第一点贪吃蛇样  转到左上第一点
-    spread();    //从左上1扩散全部一次  最后回到右上1
-    framework(); //从右上第一点延伸框架
-    ys(2000);
-    nextkj1();        //第一种接框架后 4个小正方形转动最后全亮
-    allfalloff();     //由全亮到下落关闭只剩一排
-    turnR();          //由下面一排转到右面
-    righttoleft();    //右面平移到左面
-    lefttoright();    //左面平移到右面
-    turnD();          //从右面到下面
-    followingtotop(); //下面平移到上面
-    drip(); //接上面全亮的，滴水  ,最后最下面的一排亮
-    followingtofront(); //从最下面全亮到最前面一列
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    aroundnext();     //接Around 第一面转到左边第一列
-    lefttoright();    //左面平移到右面
-    toptofollowing(); //上面平移到下面
-    followingtotop(); //下面平移到上面
-    rain();           //全关 水滴到全关
-    any1();           // 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到后面在接旋转
-    followtotop();    //从上面到后面
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    Thenthelast();    //接旋转下来到第一排
-    any5();           //从地下旋转起来  接旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    Thenthelast();    //接旋转下来到第一排
-    thelast();        //接下来一排斜的 后4点赚转到上面1
-    rain();           //全关 水滴到全关
-    any6();           //从下随机升起 一直上去 最后灭  快速过场
-    around2();        //从左下第一点贪吃蛇样  转到左上第一点
-    nextfourspread(); //由右上四个小正方体扩散一次 在扩散一次 回到中间四个
-    fourspread(); //从四个小灯亮扩散到外面四个亮
-    ys(1000);
-    any2();           //从底下中间一个小正方体  慢慢向上走 到顶层扩散开  在下到底层
-    any2();           //从底下中间一个小正方体  慢慢向上走 到顶层扩散开  在下到底层
-    followingtotop(); //下面平移到上面
-    followtotop();    //从上面到后面
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    Thenthelast();    //接旋转下来到第一排
-    thelast();        //接下来一排斜的 后4点转到左上1
-    twoidea();        //左上1开始 三个走 最后 底层亮完
-    any7();           //音频显示      从底层亮完开始，最后全灭
-    randomlight();    //随机亮完
-    randomoff();      //随机灭完
-    any8();           //由全灭 到右下第一个起来成一竖列 然后竖列逐个走 最后到左上一个亮
-    nextfourspread(); //由右上四个小正方体扩散一次 在扩散一次 回到中间四个
-    fourspread();     //从中间四个小灯亮扩散到外面四个亮
-    framework();      //从右上第一点延伸框架
-    nextkj2();        //第二种接框架后  最后上面一排亮
-    any9();           //由上面一排全亮  转到左上小正方形
-    nextkj1();        //第一种接框架后 4个小正方形转动最后全亮
-    alllighttooff();  //闪动4下最后关闭
-    rain();           //全关 水滴到全关
-    any1();           // 3个点 贪吃蛇样 到最上面一层全亮  可以接上面到后面在接旋转
-    followtotop();    //从上面到后面
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    spin();           //旋转
-    Thenthelast();    //接旋转下来到第一排
-    thelast();        //接下来一排斜的 后4点赚转到上面1
-    twoidea();        //左上1开始 三个走 最后 底层亮完
-    followingtotop(); //下面平移到上面
-    drip(); //接上面全亮的，滴水  ,最后最下面的一排亮
-    followingtofront(); //从最下面全亮到最前面一列
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    around(); //最前面一面全亮开始 围着光立方转 最后回到第一面
-    P0 = 0; //关闭全部
-    ys(200);
-    randomlight(); //随机亮完
-    end();         //全亮 呼吸灭
+    any6();
+    around2();
+    spread();
+    framework();
+    delay_ms(2000);
+    nextkj1();
+    allfalloff();
+    turnR();
+    righttoleft();
+    lefttoright();
+    turnD();
+    followingtotop();
+    drip();
+    followingtofront();
+    around();
+    around();
+    around();
+    aroundnext();
+    lefttoright();
+    toptofollowing();
+    followingtotop();
+    rain();
+    any1();
+    followtotop();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    Thenthelast();
+    any5();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    Thenthelast();
+    thelast();
+    rain();
+    any6();
+    around2();
+    nextfourspread();
+    fourspread();
+    delay_ms(1000);
+    any2();
+    any2();
+    followingtotop();
+    followtotop();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    Thenthelast();
+    thelast();
+    twoidea();
+    any7();
+    randomlight();
+    randomoff();
+    any8();
+    nextfourspread();
+    fourspread();
+    framework();
+    nextkj2();
+    any9();
+    nextkj1();
+    alllighttooff();
+    rain();
+    any1();
+    followtotop();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    spin();
+    Thenthelast();
+    thelast();
+    twoidea();
+    followingtotop();
+    drip();
+    followingtofront();
+    around();
+    around();
+    around();
+    P0 = 0; // 关闭全部 - close all
+    delay_ms(200);
+    randomlight();
+    end();
   }
 }
