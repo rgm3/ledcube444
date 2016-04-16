@@ -1,9 +1,8 @@
-SDCCOPTS  ?= --iram-size 256 --Werror --disable-warning 158
-PORT      ?= /dev/ttyUSB0
-STCGAL    ?= stcgal
 FLASHFILE ?= ledcube444.hex
-SYSCLK    ?= 11059
 MCU       ?= stc12
+SDCCOPTS  ?= --iram-size 256 --Werror --disable-warning 158
+STCGAL    ?= stcgal
+PORT      ?= /dev/ttyUSB0
 
 SRC = ledcube444.c
 
@@ -20,7 +19,7 @@ ledcube444: $(OBJ)
 		cp build/$@.ihx $@.hex
 
 flash:
-		$(STCGAL) -p $(PORT) -P $(MCU) -t $(SYSCLK) $(FLASHFILE)
+		$(STCGAL) -a -l 2400 -b 115200 -p $(PORT) -P $(MCU) $(FLASHFILE)
 
 clean:
 		rm -f *.ihx *.hex *.bin

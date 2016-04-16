@@ -1,8 +1,19 @@
-
+/**
+ * 4x4x4 two-color LED cube.
+ *
+ * This code is for an STC12C5A60S2 microcontroller, reformatted and adapted to
+ * compile on an open source stack without the Kiel tools by rgm.
+ * 
+ * Kit:
+ * http://www.icstation.com/lightsquared-4x4x4-257mm-cube-white-redblu-p-4682.html
+ *
+ * Original source code:
+ * http://www.icstation.com/ebay/IC/All%20data%20modules/4681.zip
+ *
+ * -rgm
+ */
 #include <stc12.h>
 #include <stdint.h>
-
-unsigned int scale; //占空比控制变量
 
 __code uint8_t tabP0[38][8] = {{0x00, 0x60, 0x60, 0x00, 0x00, 0x60, 0x60, 0x00}};
 __code uint8_t tabP2[] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F}; //扫描
