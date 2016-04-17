@@ -39,8 +39,10 @@ __code uint8_t delayTable[] = {
     125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138,
     139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150};
 
-void delay(uint8_t z) {
-  uint8_t x, y;
+#pragma noinvariant
+#pragma noinduction
+void delay(volatile uint8_t z) {
+  volatile uint8_t x, y;
   for (x = 80; x > 0; x--)
     for (y = z; y > 0; y--)
       ;
@@ -69,9 +71,11 @@ void light2(uint8_t idx) {
 }
 
 /** 1ms延时 - 1ms delay */
-void delay_ms(uint8_t ms)
+#pragma noinvariant
+#pragma noinduction
+void delay_ms(volatile uint8_t ms)
 {
-  uint8_t x, j;
+  volatile uint8_t x, j;
   for (j = 0; j < ms; j++)
     for (x = 0; x <= 148; x++)
       ;
@@ -1463,7 +1467,7 @@ void any9() {
 }
 
 /** 全灭 呼吸亮 - Quanmie breathing light (all set; breath easily?) */
-void begin() {
+void fadein() {
   int i;
   for (i = 0; i < 140; i++) {
     light2(i);
@@ -1473,7 +1477,7 @@ void begin() {
 }
 
 /** 全亮 呼吸灭 - off all light breathing */
-void end() {
+void fadeout() {
   int i;
   P0 = 0xff;
   P2 = 0x00;
@@ -1484,6 +1488,37 @@ void end() {
   P0 = 0x00;
 }
 
+// Testing delay functions --rgm
+void delay_s(uint16_t s) {
+  uint16_t i;
+  for (i = 0; i < s * 10; i++ ) {
+    delay_ms(100);
+  }
+}
+
+void testmain() {
+  P0M0 = 0xff;
+  P0M1 = 0x00;
+
+  while (1) {
+    fadein();
+    allfalloff();
+    fadein();
+
+    //P0 = 0; // 关闭全部 - close all
+    fadeout();
+    delay_s(10);
+/*
+    P0 = 0; // 关闭全部 - close all
+    delay_ms(2000);
+    randomlight();
+    delay_ms(5000);
+    fadeout();
+    delay_ms(5000);
+*/
+  }
+}
+
 /********************************************************************
 * 名称 - main
 ***********************************************************************/
@@ -1492,7 +1527,7 @@ void main() {
   P0M1 = 0x00;
 
   while (1) {
-    begin();
+    fadein();
     allfalloff();
     turnR();
     righttoleft();
@@ -1625,6 +1660,6 @@ void main() {
     P0 = 0; // 关闭全部 - close all
     delay_ms(200);
     randomlight();
-    end();
+    fadeout();
   }
 }
