@@ -380,7 +380,7 @@ void alllight() {
   }
 }
 
-/** 斜面亮 - slope ryo (slope down?) */
+/** 斜面亮 - slope ryo (slope down?) (show drop shadow?) */
 void evel() {
   __code uint8_t tabP0[7][8] = {
       {0x00, 0x00, 0x00, 0xFE, 0x00, 0x00, 0x00, 0xF7},
@@ -404,8 +404,7 @@ void evel() {
   }
 }
 
-/** 上面转移到后面  可以接旋转 - the above transfer can take back to the
- * rotation (?) */
+/** 上面转移到后面  可以接旋转 - move the front to the back; can be in conjunction with rotation */
 void followtotop() {
   __code uint8_t
       tabP0[10][8] = {{0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
@@ -762,8 +761,7 @@ void nextkj1() {
   }
 }
 
-/** 第二种接框架后  最后上面一排亮
-    After the second pick last frame above a row of light (?) */
+/** 第二种接框架后  最后上面一排亮 - connect the second framework(?) at the back; finally show the top row */
 void nextkj2() {
   __code uint8_t
       tabP0[10][8] = {{0x9F, 0x09, 0x09, 0x9F, 0x9F, 0x09, 0x09, 0x9F},
@@ -833,7 +831,7 @@ void drip() {
   }
 }
 
-/** 从最下面全亮到最前面一列 - All lit from the bottom to the top of a (?) */
+/** 从最下面全亮到最前面一列 - show all from the bottom to the top one row */
 void followingtofront() {
   __code uint8_t tabP0[7][8] = {
       {0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF},
